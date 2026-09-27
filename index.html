@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>同桌</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#050505;
+    color:#ddd;
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+}
+
+body{
+    transition:background 2s;
+}
+
+/* =========================
+   背景
+========================= */
+
+#background{
+    position:fixed;
+    inset:0;
+    z-index:0;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #181818 0%,
+            #0a0a0a 55%,
+            #020202 100%
+        );
+
+    transition:
+        background 2s,
+        filter 2s;
+}
+
+#background::before{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,.012) 0px,
+            rgba(255,255,255,.012) 1px,
+            transparent 1px,
+            transparent 5px
+        );
+}
+
+#blood{
+    position:fixed;
+    inset:0;
+    z-index:2;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(120,0,0,.08),
+            rgba(90,0,0,.35),
+            rgba(20,0,0,.9)
+        );
+
+    opacity:0;
+
+    transition:opacity 2s;
+
+    pointer-events:none;
+}
+
+/* =========================
+   顶部
+========================= */
+
+#top{
+    position:fixed;
+
+    top:20px;
+    left:25px;
+    right:25px;
+
+    display:flex;
+    justify-content:space-between;
+
+    color:#444;
+
+    font-size:11px;
+
+    letter-spacing:3px;
+
+    z-index:10;
+}
+
+#status{
+    transition:1s;
+}
+
+/* =========================
+   主界面
+========================= */
+
+#game{
+    position:relative;
+
+    z-index:5;
+
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    justify-content:center;
+    align-items:center;
+}
+
+/* =========================
+   对话框
+========================= */
+
+#dialogue{
+    width:min(760px,88%);
+
+    min-height:245px;
+
+    padding:35px;
+
+    background:rgba(5,5,5,.84);
+
+    border:1px solid #222;
+
+    box-shadow:
+        0 0 50px rgba(0,0,0,.85),
+        inset 0 0 30px rgba(255,255,255,.015);
+
+    transition:
+        border-color 1s,
+        box-shadow 1s,
+        background 1s;
+}
+
+#speaker{
+    font-size:14px;
+
+    color:#777;
+
+    letter-spacing:4px;
+
+    margin-bottom:25px;
+}
+
+#text{
+    min-height:105px;
+
+    font-size:21px;
+
+    line-height:2;
+
+    letter-spacing:1px;
+
+    white-space:pre-wrap;
+
+    transition:.8s;
+}
+
+.red{
+    color:#a00000 !important;
+
+    text-shadow:
+        0 0 9px rgba(160,0,0,.65);
+}
+
+.danger{
+    color:#ff1717 !important;
+
+    text-shadow:
+        0 0 10px red,
+        0 0 25px rgba(255,0,0,.6);
+}
+
+/* =========================
+   选项
+========================= */
+
+#choices{
+    width:min(760px,88%);
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+    margin-top:18px;
+}
+
+.choice{
+    width:100%;
+
+    min-height:54px;
+
+    border:1px solid #292929;
+
+    background:rgba(10,10,10,.92);
+
+    color:#bbb;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:
+        background .3s,
+        border .3s,
+        color .3s,
+        transform .15s;
+}
+
+.choice:hover{
+    background:#1d1d1d;
+
+    border-color:#555;
+
+    color:#fff;
+}
+
+.choice:active{
+    transform:scale(.98);
+}
+
+.choice.blood{
+    color:#a80000;
+
+    border-color:#480000;
+}
+
+.choice.blood:hover{
+    background:#260000;
+
+    border-color:#a00000;
+}
+
+/* =========================
+   被锁住的拒绝
+========================= */
+
+.locked{
+    position:relative;
+
+    color:#222 !important;
+
+    background:#060606 !important;
+
+    border-color:#181818 !important;
+
+    cursor:not-allowed !important;
+}
+
+.lock{
+    position:absolute;
+
+    right:20px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    font-size:22px;
+
+    color:#555;
+}
+
+/* =========================
+   乱码
+========================= */
+
+#glitch{
+    position:fixed;
+
+    inset:0;
+
+    z-index:30;
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:45px;
+
+    color:rgba(255,0,0,.48);
+
+    font-size:14px;
+
+    line-height:1.8;
+
+    word-break:break-all;
+
+    pointer-events:none;
+}
+
+/* =========================
+   黑屏
+========================= */
+
+#black{
+    position:fixed;
+
+    inset:0;
+
+    background:#000;
+
+    opacity:0;
+
+    z-index:100;
+
+    pointer-events:none;
+
+    transition:opacity 3s;
+}
+
+/* =========================
+   震动
+========================= */
+
+.shake{
+    animation:shake .08s infinite;
+}
+
+@keyframes shake{
+
+    0%{
+        transform:translate(0);
+    }
+
+    25%{
+        transform:translate(-5px,2px);
+    }
+
+    50%{
+        transform:translate(4px,-2px);
+    }
+
+    75%{
+        transform:translate(-3px,-1px);
+    }
+
+    100%{
+        transform:translate(0);
+    }
+}
+
+/* =========================
+   结尾
+========================= */
+
+#ending{
+    position:fixed;
+
+    inset:0;
+
+    z-index:120;
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    background:#000;
+
+    color:#555;
+
+    text-align:center;
+
+    opacity:0;
+
+    transition:opacity 4s;
+}
+
+#ending .creator{
+    font-size:14px;
+
+    letter-spacing:4px;
+
+    margin-bottom:18px;
+}
+
+#ending .name{
+    font-size:13px;
+
+    letter-spacing:3px;
+
+    color:#777;
+}
+
+#ending .small{
+    margin-top:35px;
+
+    font-size:9px;
+
+    color:#333;
+
+    letter-spacing:3px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="background"></div>
+<div id="blood"></div>
+
+<div id="top">
+    <span>DESKMATE / SESSION 01</span>
+    <span id="status">NORMAL</span>
+</div>
+
+<div id="game">
+
+    <div id="dialogue">
+
+        <div id="speaker">？</div>
+
+        <div id="text"></div>
+
+    </div>
+
+    <div id="choices"></div>
+
+</div>
+
+<div id="glitch"></div>
+
+<div id="black"></div>
+
+<div id="ending">
+
+    <div class="creator">
+        网页创作者：ChatGPT
+    </div>
+
+    <div class="name">
+        王一凡的同桌
+    </div>
+
+    <div class="small">
+        SESSION TERMINATED
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   DOM
+===================================================== */
+
+const speaker =
+    document.getElementById("speaker");
+
+const text =
+    document.getElementById("text");
+
+const choices =
+    document.getElementById("choices");
+
+const blood =
+    document.getElementById("blood");
+
+const background =
+    document.getElementById("background");
+
+const dialogue =
+    document.getElementById("dialogue");
+
+const status =
+    document.getElementById("status");
+
+const glitch =
+    document.getElementById("glitch");
+
+const black =
+    document.getElementById("black");
+
+const ending =
+    document.getElementById("ending");
+
+
+/* =====================================================
+   状态
+===================================================== */
+
+let refusalCount = 0;
+
+let locked = false;
+
+
+/* =====================================================
+   等待
+===================================================== */
+
+function wait(ms){
+
+    return new Promise(
+        resolve => setTimeout(resolve,ms)
+    );
+
+}
+
+
+/* =====================================================
+   打字机
+===================================================== */
+
+function typeText(content,speed=65){
+
+    return new Promise(resolve=>{
+
+        text.textContent="";
+
+        let i=0;
+
+        const timer=setInterval(()=>{
+
+            text.textContent += content[i];
+
+            i++;
+
+            if(i>=content.length){
+
+                clearInterval(timer);
+
+                resolve();
+
+            }
+
+        },speed);
+
+    });
+
+}
+
+
+/* =====================================================
+   自动说话
+===================================================== */
+
+async function say(
+    name,
+    content,
+    style="normal",
+    delay=2600
+){
+
+    clearChoices();
+
+    speaker.textContent=name;
+
+    text.className="";
+
+    if(style==="red"){
+        text.classList.add("red");
+    }
+
+    if(style==="danger"){
+        text.classList.add("danger");
+    }
+
+    await typeText(content,65);
+
+    /*
+       文字完全显示之后，
+       再停一段时间。
+    */
+
+    await wait(delay);
+
+}
+
+
+/* =====================================================
+   创建选项
+===================================================== */
+
+function choice(
+    label,
+    callback,
+    style=""
+){
+
+    const button=
+        document.createElement("button");
+
+    button.className=
+        "choice "+style;
+
+    button.textContent=
+        label;
+
+    button.onclick=
+        callback;
+
+    choices.appendChild(button);
+
+}
+
+
+/* =====================================================
+   清除
+===================================================== */
+
+function clearChoices(){
+
+    choices.innerHTML="";
+
+}
+
+
+/* =====================================================
+   开始
+===================================================== */
+
+async function start(){
+
+    await say(
+        "？",
+        "你好。",
+        "normal",
+        2800
+    );
+
+    await say(
+        "？",
+        "你是谁？",
+        "normal",
+        2500
+    );
+
+    showIdentityChoices();
+
+}
+
+
+/* =====================================================
+   身份选择
+===================================================== */
+
+function showIdentityChoices(){
+
+    clearChoices();
+
+    choice(
+        "小萝莉",
+        identityLittle
+    );
+
+    choice(
+        "王一凡",
+        identityWang
+    );
+
+    choice(
+        "两个都是",
+        identityBoth
+    );
+
+}
+
+
+/* =====================================================
+   小萝莉
+===================================================== */
+
+async function identityLittle(){
+
+    clearChoices();
+
+    await say(
+        "？",
+        "啊～？你还有这个爱好呀～",
+        "normal",
+        2800
+    );
+
+    /*
+       重点：
+       选择结束后重新出现原来的三个选项。
+    */
+
+    showIdentityChoices();
+
+}
+
+
+/* =====================================================
+   王一凡
+===================================================== */
+
+async function identityWang(){
+
+    clearChoices();
+
+    await say(
+        "？",
+        "虽然没问题，但我不喜欢这个回答。",
+        "normal",
+        3000
+    );
+
+    /*
+       这里回到原选项页面
+    */
+
+    showIdentityChoices();
+
+}
+
+
+/* =====================================================
+   两个都是
+===================================================== */
+
+async function identityBoth(){
+
+    clearChoices();
+
+    await say(
+        "？",
+        "不错的回答呦，我喜欢。",
+        "red",
+        2800
+    );
+
+    await continueAfterIdentity();
+
+}
+
+
+/* =====================================================
+   真正进入主剧情
+===================================================== */
+
+async function continueAfterIdentity(){
+
+    await say(
+        "你",
+        "那你是谁？",
+        "normal",
+        2500
+    );
+
+    await say(
+        "？",
+        "你不需要知道呢。",
+        "red",
+        3000
+    );
+
+    blood.style.opacity=".12";
+
+    dialogue.style.borderColor="#350000";
+
+    await say(
+        "？",
+        "不过……",
+        "normal",
+        2500
+    );
+
+    await say(
+        "？",
+        "那你愿意做我男朋友吗？同桌？",
+        "normal",
+        3300
+    );
+
+    await say(
+        "？",
+        "我可是很喜欢你的哦～",
+        "red",
+        2800
+    );
+
+    showLoveChoices();
+
+}
+
+
+/* =====================================================
+   恋爱选择
+===================================================== */
+
+function showLoveChoices(){
+
+    clearChoices();
+
+    /*
+       只有还没拒绝过时，
+       才显示同意。
+    */
+
+    if(refusalCount===0){
+
+        choice(
+            "同意",
+            firstAccept,
+            "blood"
+        );
+
+    }
+
+    choice(
+        "拒绝",
+        reject,
+        "blood"
+    );
+
+}
+
+
+/* =====================================================
+   第一次同意
+===================================================== */
+
+async function firstAccept(){
+
+    clearChoices();
+
+    await say(
+        "？",
+        "乖孩子，我也很爱你呢。",
+        "red",
+        3200
+    );
+
+    blood.style.opacity=".4";
+
+    await say(
+        "？",
+        "那就永远留在这里吧……",
+        "red",
+        3500
+    );
+
+    await normalRoute();
+
+}
+
+
+/* =====================================================
+   拒绝
+===================================================== */
+
+async function reject(){
+
+    refusalCount++;
+
+    clearChoices();
+
+
+    /* =========================
+       第一次拒绝
+    ========================= */
+
+    if(refusalCount===1){
+
+        await say(
+            "？",
+            "……",
+            "red",
+            2300
+        );
+
+        await say(
+            "？",
+            "你刚才……说什么？",
+            "normal",
+            3000
+        );
+
+        blood.style.opacity=".18";
+
+        /*
+           重新出现选择时，
+           只有拒绝。
+        */
+
+        showRejectOnly();
+
+        return;
+    }
+
+
+    /* =========================
+       第二次
+    ========================= */
+
+    if(refusalCount===2){
+
+        await say(
+            "？",
+            "你再说一次。",
+            "normal",
+            3000
+        );
+
+        blood.style.opacity=".28";
+
+        status.textContent=
+            "UNSTABLE";
+
+        status.style.color=
+            "#720000";
+
+        showRejectOnly();
+
+        return;
+    }
+
+
+    /* =========================
+       第三次
+    ========================= */
+
+    if(refusalCount===3){
+
+        await say(
+            "？",
+            "为什么呢……",
+            "red",
+            3000
+        );
+
+        blood.style.opacity=".4";
+
+        background.style.filter=
+            "contrast(1.15)";
+
+        showRejectOnly();
+
+        return;
+    }
+
+
+    /* =========================
+       第四次
+    ========================= */
+
+    if(refusalCount===4){
+
+        await say(
+            "？",
+            "你是不是根本没有把我当成同桌？",
+            "red",
+            3400
+        );
+
+        blood.style.opacity=".56";
+
+        dialogue.style.boxShadow=
+            "0 0 55px rgba(120,0,0,.5)";
+
+        showRejectOnly();
+
+        return;
+    }
+
+
+    /* =========================
+       第五次
+    ========================= */
+
+    if(refusalCount===5){
+
+        locked=true;
+
+        await say(
+            "？",
+            "……够了。",
+            "danger",
+            3000
+        );
+
+        blood.style.opacity=".75";
+
+        status.textContent=
+            "LOCKED";
+
+        status.style.color=
+            "#ff0000";
+
+        showFinalChoice();
+
+    }
+
+}
+
+
+/* =====================================================
+   第1～4次拒绝后
+   只能继续拒绝
+===================================================== */
+
+function showRejectOnly(){
+
+    clearChoices();
+
+    choice(
+        "拒绝",
+        reject,
+        "blood"
+    );
+
+}
+
+
+/* =====================================================
+   第五次以后
+===================================================== */
+
+function showFinalChoice(){
+
+    clearChoices();
+
+    /*
+       这时才第一次重新出现同意。
+    */
+
+    choice(
+        "同意",
+        forcedAccept,
+        "blood"
+    );
+
+    const button=
+        document.createElement("button");
+
+    button.className=
+        "choice locked";
+
+    button.textContent=
+        "拒绝";
+
+    button.disabled=true;
+
+    const lock=
+        document.createElement("span");
+
+    lock.className=
+        "lock";
+
+    lock.textContent="⛓";
+
+    button.appendChild(lock);
+
+    choices.appendChild(button);
+
+}
+
+
+/* =====================================================
+   五次拒绝后的同意
+===================================================== */
+
+async function forcedAccept(){
+
+    clearChoices();
+
+    /*
+       第二条完全不同的路线
+    */
+
+    await wait(800);
+
+    document.body.classList.add("shake");
+
+    blood.style.opacity=".92";
+
+    status.textContent=
+        "ERROR";
+
+    status.style.color=
+        "#ff0000";
+
+    glitch.style.display=
+        "flex";
+
+    glitch.innerHTML=`
+        01001001 01010100<br>
+        ERROR 404<br>
+        ERROR 404<br>
+        你终于答应了<br>
+        你终于答应了<br>
+        你终于答应了<br>
+        <br>
+        为什么现在才答应？<br>
+        为什么现在才答应？<br>
+        为什么现在才答应？
+    `;
+
+    await say(
+        "？",
+        "真的吗！？",
+        "danger",
+        2800
+    );
+
+    await say(
+        "？",
+        "你终于愿意留下来了。",
+        "red",
+        3200
+    );
+
+    await say(
+        "？",
+        "可是我有一点不明白。",
+        "normal",
+        2800
+    );
+
+    await say(
+        "？",
+        "你明明已经拒绝我五次了。",
+        "red",
+        3000
+    );
+
+    await say(
+        "？",
+        "为什么最后又同意了？",
+        "danger",
+        3300
+    );
+
+    await say(
+        "你",
+        "……",
+        "normal",
+        2600
+    );
+
+    await say(
+        "？",
+        "算了。",
+        "red",
+        2400
+    );
+
+    await say(
+        "？",
+        "答案已经不重要了。",
+        "red",
+        3000
+    );
+
+    await say(
+        "？",
+        "因为你已经留下来了。",
+        "danger",
+        3500
+    );
+
+    document.body.classList.remove("shake");
+
+    await forcedTruth();
+
+}
+
+
+/* =====================================================
+   第一条路线
+===================================================== */
+
+async function normalRoute(){
+
+    await say(
+        "？",
+        "同桌。",
+        "normal",
+        2600
+    );
+
+    await say(
+        "你",
+        "嗯？",
+        "normal",
+        2300
+    );
+
+    await say(
+        "？",
+        "你有没有发现一件事情？",
+        "normal",
+        2800
+    );
+
+    await say(
+        "？",
+        "从刚才开始……",
+        "normal",
+        2600
+    );
+
+    await say(
+        "？",
+        "就只有你一个人在说话。",
+        "red",
+        3300
+    );
+
+    await say(
+        "？",
+        "我好像……从来没有回答过你。",
+        "red",
+        3200
+    );
+
+    await say(
+        "？",
+        "对不对？",
+        "danger",
+        3200
+    );
+
+    await say(
+        "？",
+        "可是你还是相信我。",
+        "red",
+        3000
+    );
+
+    await say(
+        "？",
+        "真乖。",
+        "red",
+        3500
+    );
+
+    await say(
+        "？",
+        "所以我们会一直在这里。",
+        "red",
+        3500
+    );
+
+    await endScene();
+
+}
+
+
+/* =====================================================
+   第二条路线真相
+===================================================== */
+
+async function forcedTruth(){
+
+    await say(
+        "SYSTEM",
+        "检测到异常会话。",
+        "danger",
+        2800
+    );
+
+    await say(
+        "SYSTEM",
+        "用户状态：无法确认。",
+        "danger",
+        2800
+    );
+
+    await say(
+        "？",
+        "别看那个。",
+        "red",
+        2700
+    );
+
+    await say(
+        "？",
+        "看我。",
+        "danger",
+        3500
+    );
+
+    document.body.classList.add("shake");
+
+    await wait(900);
+
+    document.body.classList.remove("shake");
+
+    await say(
+        "？",
+        "你知道吗？",
+        "normal",
+        2500
+    );
+
+    await say(
+        "？",
+        "其实从你第一次点开这个网页开始……",
+        "red",
+        3300
+    );
+
+    await say(
+        "？",
+        "我就已经知道你会选择什么了。",
+        "danger",
+        3500
+    );
+
+    await say(
+        "？",
+        "包括那五次拒绝。",
+        "red",
+        3000
+    );
+
+    await say(
+        "？",
+        "全部都是。",
+        "danger",
+        3200
+    );
+
+    await say(
+        "？",
+        "我等的就是现在。",
+        "red",
+        3500
+    );
+
+    await endScene();
+
+}
+
+
+/* =====================================================
+   最终结束
+===================================================== */
+
+async function endScene(){
+
+    clearChoices();
+
+    await wait(1800);
+
+    glitch.style.display=
+        "flex";
+
+    glitch.innerHTML=`
+        01001000 01000101 01001100 01010000<br>
+        ERROR<br>
+        ERROR<br>
+        SESSION_01<br>
+        SESSION_01<br>
+        SESSION_01<br>
+        <br>
+        你还在看。<br>
+        你还在看。<br>
+        你还在看。<br>
+        <br>
+        ？？？？？？？？？？？？？？？？<br>
+        <br>
+        CONNECTION LOST
+    `;
+
+    await wait(3000);
+
+    /*
+       页面开始慢慢变黑
+    */
+
+    black.style.opacity="1";
+
+    await wait(4500);
+
+    glitch.style.display="none";
+
+    /*
+       黑屏后出现结尾字幕
+    */
+
+    ending.style.display="flex";
+
+    await wait(500);
+
+    ending.style.opacity="1";
+
+}
+
+
+/* =====================================================
+   启动
+===================================================== */
+
+start();
+
+</script>
+
+</body>
+  </html>
